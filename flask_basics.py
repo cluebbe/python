@@ -68,17 +68,33 @@ def greet_loudly(name):
 
 print(greet_loudly("Carol"))        # "HELLO, CAROL!" — @shout was applied at definition time
 
+# Note what @shout COST us: greet_loudly is the wrapper now, so the plain
+# "Hello, Carol!" can no longer be produced. This decorator REPLACED the
+# function. Flask's decorator deliberately does the opposite — see Step D.
+
 # Step D: a decorator does not have to replace the function. It can simply
 # REGISTER it somewhere and hand back the original, unchanged. This is what
 # Flask's @app.route does.
 
 routes = {}                         # Our own tiny "URL -> function" table
 
-def route(path):                    # Takes the URL, returns the actual decorator
-    def decorator(func):            # Receives the function being decorated
-        routes[path] = func         # Register it in the table — the side effect we want
+# About the "/home" argument: "@" applies whatever the line evaluates to.
+# "@shout" is already a decorator, so it is applied directly. But "@route(...)"
+# CALLS route first and applies whatever comes back, in two steps:
+#
+#     decorator = route("/home")    # 1. call route with the URL -> get a decorator
+#     home      = decorator(home)   # 2. @ applies that decorator to home
+#
+# In one line (note the TWO sets of parentheses): home = route("/home")(home)
+# Hence the extra nesting level: the outer function takes the URL, the inner
+# one takes the function. Rule of thumb: parentheses in the "@" line mean one
+# more layer in the definition.
+
+def route(path):                    # Outer: receives the URL, e.g. "/home"
+    def decorator(func):            # Inner: receives the function being decorated
+        routes[path] = func         # "path" is still visible here — a closure, as in Step B
         return func                 # Give the function back untouched
-    return decorator
+    return decorator                # Outer hands back the inner function
 
 @route("/home")                     # Means: home = route("/home")(home)
 def home():
@@ -94,6 +110,26 @@ print(home())                       # The original function still works normally
 
 # That dictionary lookup is, in essence, what a web framework does: read the
 # requested URL, find the registered function, call it, send back the result.
+
+
+# Step E: REPLACE vs. ADD — the key difference, side by side.
+# Two decorators, two identical functions, opposite outcomes.
+
+@shout                              # Replacing decorator: returns a NEW function
+def hello_replaced(name):
+    return f"Hello, {name}!"
+
+@route("/hello")                    # Registering decorator: returns the ORIGINAL function
+def hello_registered(name):
+    return f"Hello, {name}!"
+
+print(hello_replaced("Dave"))       # "HELLO, DAVE!" — changed; the plain greeting is gone
+print(hello_registered("Dave"))     # "Hello, Dave!" — untouched, exactly as written
+print(routes["/hello"]("Dave"))     # "Hello, Dave!" — and now reachable via its URL too
+
+# hello_replaced LOST its original behaviour; hello_registered lost nothing and
+# GAINED a URL. That is why Flask can decorate your view functions without ever
+# changing what they do — @app.route only adds them to the URL table.
 
 
 # ---------------------------------------------------------------------------

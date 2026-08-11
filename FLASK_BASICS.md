@@ -105,7 +105,7 @@ def shout(func):                # Takes a function as its argument
     def wrapper(name):          # Defines a replacement function
         result = func(name)     # Calls the original
         return result.upper()   # Modifies the result
-    return wrapper              # Returns the replacement — note: NOT wrapper()
+    return wrapper              # Returns the function object — no parentheses, not called
 
 def greet(name):
     return f"Hello, {name}!"
@@ -167,6 +167,10 @@ print(greet("Carol"))           # "HELLO, CAROL!"
 - The decorator runs **once**, when Python reads the `def` — not on every
   call. From then on the name `greet` simply points at `wrapper`.
 - The `@` line must sit directly above the `def`.
+- **`@shout` REPLACES your function.** Afterwards `greet` *is* `wrapper`, so
+  calling it can only ever give you the shouted version — the plain
+  `"Hello, Carol!"` is gone for good. Remember this when you reach Task 4:
+  Flask's decorator deliberately does the opposite.
 - You can stack decorators. They apply bottom-up: the one closest to the `def`
   wraps first.
 
@@ -179,12 +183,70 @@ print(greet("Carol"))           # "HELLO, CAROL!"
 Flask's decorator does *not* replace your function. It **registers** it in a
 lookup table and hands the original back unchanged.
 
-Build a tiny version yourself: a dict `routes`, and a decorator `route(path)`
-that stores the decorated function under `path` and returns it untouched.
-Register two functions, then call one by looking up its URL.
+### First: what is the `"/home"` in `@route("/home")`?
+
+Every decorator so far was written bare, as `@shout`. But a route needs to know
+*which URL* it is for, so you have to pass a value in. That changes the shape of
+the decorator, and it is the part beginners trip over.
+
+The rule: **`@` applies whatever the line evaluates to.**
+
+- `@shout` — `shout` is already a decorator, so `@` applies it directly.
+- `@route("/home")` — this **calls** `route("/home")` first, and applies
+  *whatever it returns* to the function below.
+
+So `route` itself is not the decorator. It is a function that *builds* one:
+
+```python
+@route("/home")
+def home(): ...
+```
+
+happens in two steps:
+
+```python
+decorator = route("/home")      # Step 1: call route with the URL -> returns a decorator
+home      = decorator(home)     # Step 2: @ applies that decorator to home
+```
+
+or in one line — note the **two** sets of parentheses:
+
+```python
+home = route("/home")(home)
+```
+
+That is why `route` needs an extra level of nesting compared to `shout`: the
+outer function takes the **URL**, the inner one takes the **function**.
+
+```python
+def route(path):            # Outer: receives "/home"
+    def decorator(func):    # Inner: receives the function home
+        ...
+        return func
+    return decorator        # Outer returns the inner one
+```
+
+`path` stays available inside `decorator` even after `route` has returned — the
+same closure you used in Task 2. That is how each route remembers its own URL.
+
+**Rule of thumb:** parentheses in the `@` line mean one extra layer of nesting
+in the definition.
+
+### Now build it
+
+1. Build a tiny version yourself: a dict `routes`, and a decorator `route(path)`
+   that stores the decorated function under `path` and returns it untouched.
+   Register two functions, then call one by looking up its URL.
+
+2. Now prove the difference to Task 3. Write the **same** function twice under
+   different names, decorate one with `@shout` and the other with
+   `@route("/hello")`, then call both. Which one can still produce its original
+   output — and what did each decorator do to the function you wrote?
 
 <details>
 <summary>Solution</summary>
+
+**Step 1** — the registry and the decorator:
 
 ```python
 routes = {}                     # The "URL -> function" table
@@ -208,12 +270,35 @@ print(routes["/home"]())        # "This is the home page"
 print(home())                   # "This is the home page" — still works normally
 ```
 
+**Step 2** — the two decorators side by side on identical functions. This is
+*the* thing to understand about Flask routes:
+
+```python
+@shout                          # Replacing decorator: returns a NEW function
+def hello_replaced(name):
+    return f"Hello, {name}!"
+
+@route("/hello")                # Registering decorator: returns the ORIGINAL function
+def hello_registered(name):
+    return f"Hello, {name}!"
+
+print(hello_replaced("Dave"))       # "HELLO, DAVE!"  <- changed; plain greeting is gone
+print(hello_registered("Dave"))     # "Hello, Dave!"  <- untouched, exactly as written
+print(routes["/hello"]("Dave"))     # "Hello, Dave!"  <- and now reachable via its URL too
+```
+
+`hello_replaced` **lost** its original behaviour. `hello_registered` lost
+nothing and **gained** a URL.
+
 **Key points:**
 - `route("/home")` is a **decorator factory**: it is called first with the
   URL, and *returns* the decorator that then receives the function. That extra
   layer is why `@app.route("/")` has parentheses while `@shout` does not.
-- Because `decorator` returns `func` unchanged, calling `home()` directly
-  behaves exactly as before. The only effect is the entry in `routes`.
+- `return func` instead of `return wrapper` is the whole difference. The
+  hidden assignment becomes `home = home`, so nothing is replaced: calling
+  `home()` behaves exactly as before, and the only effect is the new entry in
+  `routes`. The decorator **adds** a capability rather than swapping the
+  function out.
 - Look up the requested URL in that dict, call the function, send back the
   result — that is a web framework in miniature. Flask adds HTTP parsing,
   pattern matching, and a server around this same idea.
