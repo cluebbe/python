@@ -1,8 +1,8 @@
 # Python Workshops
 
 Hands-on Python tutorials, starting from scratch. No prior programming
-experience needed for the first workshops, and no third-party packages —
-everything runs on a plain Python installation.
+experience needed for the first workshops, and the first two need no
+third-party packages at all — they run on a plain Python installation.
 
 Each tutorial comes as a pair: a runnable `.py` file you can execute and
 experiment with, and a `.md` workshop file with step-by-step tasks and
@@ -12,7 +12,8 @@ collapsible solutions.
 
 ## Getting Started
 
-**Requirements:** Python 3.9 or newer. Nothing else.
+**Requirements:** Python 3.9 or newer. Workshops 1 and 2 need nothing else;
+workshop 3 additionally needs Flask.
 
 ```bash
 # Check your Python version
@@ -20,6 +21,12 @@ python3 --version
 
 # Run a tutorial
 python3 python_basics.py
+
+# Workshop 3 only — install Flask in a virtual environment first
+python3 -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install flask
+python flask_basics.py
 ```
 
 Work through the `.md` file alongside the code: read a section, try the task
@@ -46,9 +53,19 @@ methods, readable `__str__` output, inheriting from a parent class, and using
 `super()` to extend it — all illustrated with a practical library system
 example.
 
+### 3. Web Development with Flask
+**Files:** [flask_basics.py](flask_basics.py) · [FLASK_BASICS.md](FLASK_BASICS.md)
+
+Building a web application with Flask, starting from the language feature it
+is built on: **decorators**. The workshop first constructs a decorator from
+scratch in plain Python — including a miniature `@route` that registers
+functions in a dictionary — so that `@app.route("/")` stops being magic. It
+then covers dynamic URLs, query parameters, HTTP methods, JSON responses,
+Jinja2 templates, and error handlers, ending with a small task API.
+
 Start with Python Basics; the OOP workshop assumes you are comfortable with
-functions, lists, and dictionaries. More advanced topics will be added here
-over time.
+functions, lists, and dictionaries, and the Flask workshop assumes both. More
+advanced topics will be added here over time.
 
 ---
 
