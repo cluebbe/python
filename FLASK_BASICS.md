@@ -305,6 +305,107 @@ nothing and **gained** a URL.
 
 </details>
 
+### When does the decorator's code actually run?
+
+Add a `print` to each of the two decorators and something surprising happens:
+
+```python
+def shout(func):
+    def wrapper(name):
+        print("shout here!")                    # never appears until you CALL greet
+        return func(name).upper()
+    return wrapper
+
+def route(path):
+    def decorator(func):
+        print(f"registering {path}")            # appears immediately, on its own
+        routes[path] = func
+        return func
+    return decorator
+```
+
+Just *defining* the decorated functions prints `registering /home` — but not
+`shout here!`. Before reading on: why?
+
+<details>
+<summary>Solution</summary>
+
+The two prints sit at **different nesting levels**, even though on screen they
+look parallel. Line the two decorators up by *role* instead of by indentation:
+
+| Level | Receives | Runs | In `shout` | In `route` |
+|---|---|---|---|---|
+| 1 | the decorator's argument (`path`) | at the `@` line | — | `route` |
+| 2 | the **function** (`func`) | at the `@` line | `shout` | `decorator` |
+| 3 | the **call arguments** (`name`) | on every call | `wrapper` | — |
+
+`shout` takes no argument, so it starts at level 2. `route` takes a URL, so it
+starts at level 1 and its inner `decorator` is level 2.
+
+That is the whole answer: **`decorator` is the counterpart of `shout` itself,
+not of `wrapper`.** `wrapper` has no counterpart in the `route` version at
+all — `route` does not wrap anything, it returns `func` untouched.
+
+Trace each one:
+
+```python
+@shout
+def greet(name): ...
+```
+Python runs `shout(greet)` once, right there. That body is only
+`def wrapper...` + `return wrapper` — the print is not in it. `wrapper`'s body
+does not execute until someone writes `greet("Charlie")`.
+
+```python
+@route("/home")
+def home(): ...
+```
+Python runs `route("/home")` → gets back `decorator` → **immediately** runs
+`decorator(home)`. Both happen at the `@` line, and the print lives inside
+`decorator`, so it fires as the module is read. Calling `home()` afterwards
+runs the plain original function — no decorator code is involved at all.
+
+Move each print one level and the behaviour swaps. `shout` printing at
+decoration time:
+
+```python
+def shout(func):
+    print("hello")                  # decoration time now
+    def wrapper(name):
+        return func(name).upper()
+    return wrapper
+```
+
+`route` printing at call time — which needs a wrapper it did not have before:
+
+```python
+def route(path):
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            print("hello")          # call time now
+            return func(*args, **kwargs)
+        routes[path] = wrapper
+        return wrapper              # note: no longer the original function
+    return decorator
+```
+
+**Key points:**
+- A decorator body runs **once, when the function is defined**. Only code
+  inside a returned `wrapper` runs **on each call**.
+- Counting `def`s is not enough — ask *what does this level receive?* A level
+  that receives `func` is decoration time; a level that receives the caller's
+  arguments is call time.
+- This is why `@app.route("/")` registers URLs at import time, and why
+  `flask routes` can list every URL of your app without a single request
+  arriving. Registration is decoration-time work.
+- It also explains the most common decorator bug: forgetting `return func` (or
+  `return wrapper`) leaves the decorator returning `None`, so the name is bound
+  to `None` and calling it raises
+  `TypeError: 'NoneType' object is not callable` — at call time, far from the
+  `@` line that caused it.
+
+</details>
+
 ---
 
 ## Task 5 — Your First Flask App

@@ -132,6 +132,68 @@ print(routes["/hello"]("Dave"))     # "Hello, Dave!" — and now reachable via i
 # changing what they do — @app.route only adds them to the URL table.
 
 
+# Step F: DECORATION TIME vs. CALL TIME — when does decorator code run?
+#
+# Put a print inside each decorator and the results differ in a way that looks
+# inconsistent at first. The reason is that the two prints sit at different
+# NESTING LEVELS, even though on screen they look parallel:
+#
+#   Level 1   receives the decorator's argument (path)   runs at the "@" line
+#   Level 2   receives the FUNCTION (func)               runs at the "@" line
+#   Level 3   receives the CALL arguments (name)         runs on every call
+#
+# "shout" takes no argument, so it starts at level 2. "route" takes a URL, so it
+# starts at level 1 and its inner "decorator" is level 2. So "decorator" is the
+# counterpart of "shout" ITSELF — not of "wrapper". "wrapper" has no counterpart
+# in the route version at all, because route does not wrap anything.
+
+print("\n--- 1b. Decoration time vs. call time ---")
+
+def shout_verbose(func):
+    print("  shout_verbose: decoration time")   # Level 2 — runs at the "@" line
+    def wrapper(name):
+        print("  wrapper: call time")           # Level 3 — runs on every call
+        return func(name).upper()
+    return wrapper
+
+def route_verbose(path):
+    def decorator(func):
+        print(f"  route_verbose: decoration time — registering {path}")
+        routes[path] = func                     # Level 2 — runs at the "@" line
+        return func                             # No level 3: nothing is wrapped
+    return decorator
+
+print("Defining greet_verbose ...")
+
+@shout_verbose                      # shout_verbose's own body runs NOW
+def greet_verbose(name):
+    return f"Hello, {name}!"
+
+print("Defining page_verbose ...")
+
+@route_verbose("/verbose")          # route_verbose AND decorator both run NOW
+def page_verbose():
+    return "A verbose page"
+
+print("Both are defined. Now calling them:")
+print(" ", greet_verbose("Eve"))    # "wrapper: call time" appears here, not above
+print(" ", page_verbose())          # Nothing extra — the decorator kept no wrapper
+
+# The rule: a decorator body runs ONCE, when the function is defined. Only code
+# inside a returned "wrapper" runs on every call. Counting "def"s is not enough —
+# ask what each level RECEIVES: a level that receives func is decoration time, a
+# level that receives the caller's arguments is call time.
+#
+# This is why @app.route registers URLs at import time, and why "flask routes"
+# can list every URL of your app before a single request arrives.
+#
+# It also explains the most common decorator bug: forget the "return func" (or
+# "return wrapper") and the decorator returns None, so the decorated name IS
+# None. The error then surfaces at call time, far away from the "@" line:
+#
+#     TypeError: 'NoneType' object is not callable
+
+
 # ---------------------------------------------------------------------------
 # 2. A MINIMAL FLASK APP
 # ---------------------------------------------------------------------------
