@@ -44,10 +44,12 @@ source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install flask
 ```
 
-Run with:
+This workshop lives in its own folder, because from Task 12 on it is more than
+a single file — it also ships `templates/` and `static/`. Run it from the
+repository root:
 
 ```bash
-python flask_basics.py
+python flask_tutorial/flask_basics.py
 ```
 
 Then open <http://127.0.0.1:5000> in your browser. Stop the server with
@@ -726,15 +728,133 @@ def welcome(name):
 - Jinja2 **escapes HTML automatically**, so a name like `<script>` is
   displayed as text rather than executed. This is your main defence against
   cross-site scripting.
-- In a real project use `render_template("welcome.html")` with the file in a
-  `templates/` folder next to your app. `render_template_string` is used here
-  only to keep the workshop in a single file.
+- `render_template_string` is used here only to keep this task in a single
+  file. Real projects keep the HTML in its own file and call
+  `render_template("welcome.html")` — that is Task 12.
 
 </details>
 
 ---
 
-## Task 12 — Handling Errors
+## Task 12 — Templates in Their Own Files
+
+`render_template_string` kept Task 11 in a single file, but real projects put
+HTML in real `.html` files. Flask looks for them in a folder called
+**`templates/`** sitting next to your application file — and that is what the
+`__name__` in `Flask(__name__)` back in Task 5 was for: it tells Flask where
+your module lives on disk, so it can find `templates/` and `static/` relative
+to it.
+
+```
+flask_tutorial/
+├── flask_basics.py
+├── static/
+│   └── style.css            <- CSS, images, JS
+└── templates/
+    ├── base.html            <- the shared page shell
+    └── welcome.html         <- fills in the shell
+```
+
+Note that this is relative to the **`.py` file**, not to the directory you run
+`python` from — which is why `python flask_tutorial/flask_basics.py` finds the
+templates just fine from the repository root.
+
+Move the Task 11 page into `templates/welcome.html` and render it with
+`render_template`. Then pull the parts every page shares — the doctype, the
+`<head>`, the nav — into a `base.html` that `welcome.html` **extends**.
+
+<details>
+<summary>Solution</summary>
+
+`templates/base.html` — the shell, with named holes for children to fill:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}My Site{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav><a href="{{ url_for('index') }}">Home</a></nav>
+
+    {% block content %}{% endblock %}
+
+    <footer>Built with Flask</footer>
+</body>
+</html>
+```
+
+`templates/welcome.html` — only the part that differs:
+
+```html
+{% extends "base.html" %}
+
+{% block title %}Welcome, {{ name }}{% endblock %}
+
+{% block content %}
+    <h1>Welcome, {{ name }}!</h1>
+    {% if items %}
+        <ul>
+        {% for item in items %}
+            <li>{{ item }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>Your list is empty.</p>
+    {% endif %}
+{% endblock %}
+```
+
+The route — note that only the import and the function call changed:
+
+```python
+from flask import Flask, render_template
+
+app = Flask(__name__)           # __name__ is how templates/ and static/ are found
+
+@app.route("/welcome-page/<name>")
+def welcome_page(name):
+    todo = ["Learn decorators", "Build a route", "Render a template"]
+    return render_template("welcome.html", name=name, items=todo)
+```
+
+**Key points:**
+- `render_template` takes a **filename relative to `templates/`**, not a path
+  and not HTML. Everything else works exactly like `render_template_string`:
+  keyword arguments become variables in the template.
+- `TemplateNotFound` almost always means the folder is misnamed or in the wrong
+  place. It must be called `templates`, lowercase, and sit beside the `.py`
+  file that created the app — not beside the folder you happened to run
+  `python` from.
+- `{% extends "base.html" %}` must be the **first line** of the child template.
+  The child then defines only `{% block %}`s; anything outside a block is
+  ignored. This is Jinja2's answer to copy-pasting the same `<head>` into every
+  page — change the nav once in `base.html` and every page gets it.
+- A `{% block %}` in the parent is a **named hole with a default**. A child
+  that does not override `title` gets `My Site`. Use `{{ super() }}` inside a
+  block to keep the parent's content *and* add to it.
+- **`url_for` builds URLs instead of hardcoding them.** `url_for('index')`
+  takes the *function* name, not the URL, and asks the registry Flask built
+  from your `@app.route` decorators — so if you later change the URL in the
+  decorator, every link follows automatically. `url_for('static',
+  filename='style.css')` does the same for files in `static/`. Dynamic routes
+  take their parameters as keywords: `url_for('welcome_page', name='bob')`
+  gives `/welcome-page/bob`.
+- With `debug=True`, **edited templates are picked up on the next request** —
+  no restart needed, unlike changes to your `.py` file.
+- Autoescaping is on for `.html` files, so the XSS protection from Task 11
+  still applies here.
+- The real win is separation: the route decides *what data* the page needs,
+  the template decides *how it looks*. Neither has to know much about the
+  other.
+
+</details>
+
+---
+
+## Task 13 — Handling Errors
 
 Register a friendly page for **404 Not Found**.
 
@@ -761,7 +881,7 @@ def not_found(error):
 
 ---
 
-## Task 13 — Putting It All Together
+## Task 14 — Putting It All Together
 
 Build a small task API on an in-memory list:
 

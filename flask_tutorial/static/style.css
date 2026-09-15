@@ -1,0 +1,19 @@
+/* Files in static/ are served as-is at /static/<filename>. */
+
+body {
+    font-family: system-ui, sans-serif;
+    max-width: 40rem;
+    margin: 2rem auto;
+    padding: 0 1rem;
+    line-height: 1.5;
+}
+
+nav a { text-decoration: none; }
+
+footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #ddd;
+    color: #666;
+    font-size: 0.875rem;
+}

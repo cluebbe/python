@@ -6,7 +6,8 @@ third-party packages at all — they run on a plain Python installation.
 
 Each tutorial comes as a pair: a runnable `.py` file you can execute and
 experiment with, and a `.md` workshop file with step-by-step tasks and
-collapsible solutions.
+collapsible solutions. The Flask workshop needs supporting files of its own, so
+it lives in the `flask_tutorial/` folder.
 
 ---
 
@@ -26,7 +27,7 @@ python3 python_basics.py
 python3 -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install flask
-python flask_basics.py
+python flask_tutorial/flask_basics.py
 ```
 
 Work through the `.md` file alongside the code: read a section, try the task
@@ -54,14 +55,16 @@ methods, readable `__str__` output, inheriting from a parent class, and using
 example.
 
 ### 3. Web Development with Flask
-**Files:** [flask_basics.py](flask_basics.py) · [FLASK_BASICS.md](FLASK_BASICS.md)
+**Files:** [flask_tutorial/flask_basics.py](flask_tutorial/flask_basics.py) ·
+[flask_tutorial/FLASK_BASICS.md](flask_tutorial/FLASK_BASICS.md)
 
 Building a web application with Flask, starting from the language feature it
 is built on: **decorators**. The workshop first constructs a decorator from
 scratch in plain Python — including a miniature `@route` that registers
 functions in a dictionary — so that `@app.route("/")` stops being magic. It
 then covers dynamic URLs, query parameters, HTTP methods, JSON responses,
-Jinja2 templates, and error handlers, ending with a small task API.
+Jinja2 templates in their own files with `templates/` and `static/`, and error
+handlers, ending with a small task API.
 
 Start with Python Basics; the OOP workshop assumes you are comfortable with
 functions, lists, and dictionaries, and the Flask workshop assumes both. More

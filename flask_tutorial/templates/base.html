@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <!-- A block is a named hole with a default. Children may override it. -->
+    <title>{% block title %}My Site{% endblock %}</title>
+    <!-- url_for builds the URL, so the path stays correct if the app moves. -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- url_for takes the FUNCTION name, not the URL. -->
+    <nav><a href="{{ url_for('index') }}">Home</a></nav>
+
+    {% block content %}{% endblock %}
+
+    <footer>Built with Flask</footer>
+</body>
+</html>

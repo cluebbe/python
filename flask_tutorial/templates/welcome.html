@@ -1,0 +1,17 @@
+{# extends must be the first line; only blocks below it are used. #}
+{% extends "base.html" %}
+
+{% block title %}Welcome, {{ name }}{% endblock %}
+
+{% block content %}
+    <h1>Welcome, {{ name }}!</h1>
+    {% if items %}
+        <ul>
+        {% for item in items %}
+            <li>{{ item }}</li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>Your list is empty.</p>
+    {% endif %}
+{% endblock %}

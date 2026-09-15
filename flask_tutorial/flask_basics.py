@@ -11,13 +11,13 @@
 #   source venv/bin/activate        # Windows: venv\Scripts\activate
 #   pip install flask
 #
-# Run with:
-#   python flask_basics.py
+# Run with (from the repository root):
+#   python flask_tutorial/flask_basics.py
 #
 # Then open http://127.0.0.1:5000 in your browser.
 # Stop the server with Ctrl+C.
 
-from flask import Flask, request, render_template_string
+from flask import Flask, request, render_template_string, render_template
 
 print("=" * 40)
 print("  Flask Basics Tutorial")
@@ -330,7 +330,33 @@ def welcome(name):
 
 
 # ---------------------------------------------------------------------------
-# 9. ERROR HANDLING
+# 9. TEMPLATES IN THEIR OWN FILES
+# ---------------------------------------------------------------------------
+# Real projects keep HTML in .html files inside a templates/ folder next to
+# this file. That is what Flask(__name__) is for: __name__ tells Flask where
+# this module lives, so it can find templates/ and static/ relative to it.
+#
+#   flask_tutorial/flask_basics.py
+#   flask_tutorial/static/style.css       <- served at /static/style.css
+#   flask_tutorial/templates/base.html    <- the shared page shell
+#   flask_tutorial/templates/welcome.html <- extends base.html, fills its blocks
+#
+# The lookup is relative to THIS FILE, not to the directory you ran python
+# from, so the paths above work from anywhere.
+#
+# render_template takes a FILENAME relative to templates/. Everything else is
+# the same as render_template_string: keyword arguments become template
+# variables. With debug=True, edited templates are picked up on the next
+# request — no restart needed.
+
+@app.route("/welcome-page/<name>")
+def welcome_page(name):
+    todo = ["Learn decorators", "Build a route", "Render a template"]
+    return render_template("welcome.html", name=name, items=todo)
+
+
+# ---------------------------------------------------------------------------
+# 10. ERROR HANDLING
 # ---------------------------------------------------------------------------
 # @app.errorhandler is another decorator — same mechanism, different registry.
 # Flask stores the function under the status code instead of under a URL.
@@ -341,7 +367,7 @@ def not_found(error):                       # Receives the error object
 
 
 # ---------------------------------------------------------------------------
-# 10. PUTTING IT ALL TOGETHER — A SMALL TASK API
+# 11. PUTTING IT ALL TOGETHER — A SMALL TASK API
 # ---------------------------------------------------------------------------
 # An in-memory list of tasks with routes to list, view, and add them.
 # The data disappears when the server restarts — that is fine for learning.
@@ -373,7 +399,7 @@ def add_task():
 
 
 # ---------------------------------------------------------------------------
-# 11. STARTING THE SERVER
+# 12. STARTING THE SERVER
 # ---------------------------------------------------------------------------
 # This guard means the server only starts when the file is run directly,
 # not when it is imported by another module or by a production server.
@@ -381,5 +407,6 @@ def add_task():
 if __name__ == "__main__":
     print("\n--- Starting server on http://127.0.0.1:5000 (Ctrl+C to stop) ---")
     print("Try: /  /about  /user/alice  /post/42  /price/10.50")
-    print("     /search?q=flask  /welcome/bob  /api/status  /tasks  /tasks/1")
+    print("     /search?q=flask  /welcome/bob  /welcome-page/bob")
+    print("     /api/status  /tasks  /tasks/1")
     app.run(debug=True)             # debug=True: auto-reload on save + error pages in the browser
