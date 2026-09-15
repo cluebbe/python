@@ -202,17 +202,20 @@ So `route` itself is not the decorator. It is a function that *builds* one:
 def home(): ...
 ```
 
-happens in two steps:
+is exactly the same as:
+
+```python
+def home(): ...
+home = route("/home")(home)
+```
+
+Compare that with Task 3's `greet = shout(greet)`: the only difference is the
+**two** sets of parentheses. Python evaluates the `@` line first, then calls the
+result on your function — so it happens in two steps:
 
 ```python
 decorator = route("/home")      # Step 1: call route with the URL -> returns a decorator
 home      = decorator(home)     # Step 2: @ applies that decorator to home
-```
-
-or in one line — note the **two** sets of parentheses:
-
-```python
-home = route("/home")(home)
 ```
 
 That is why `route` needs an extra level of nesting compared to `shout`: the
@@ -228,6 +231,15 @@ def route(path):            # Outer: receives "/home"
 
 `path` stays available inside `decorator` even after `route` has returned — the
 same closure you used in Task 2. That is how each route remembers its own URL.
+
+The two decorators side by side:
+
+| | `@shout` | `@route("/home")` |
+|---|---|---|
+| after the `@` | a function | a **call** that returns a function |
+| is the same as | `greet = shout(greet)` | `home = route("/home")(home)` |
+| you get back | `wrapper` — a **different** function | `home` — the **same** function |
+| effect at import time | none | `routes["/home"] = home` |
 
 **Rule of thumb:** parentheses in the `@` line mean one extra layer of nesting
 in the definition.
@@ -434,6 +446,10 @@ if __name__ == "__main__":
   `templates/` and `static/` relative to your file.
 - `app.route` is a **method** on the app object, but works exactly like the
   `route` factory from Task 4 — it registers `index` in the app's URL map.
+  So `@app.route("/")` above `def index(): ...` is exactly the same as
+  `index = app.route("/")(index)`, and `index` comes back unchanged: calling
+  `index()` yourself still just returns the string, with no Flask magic
+  attached.
 - `debug=True` restarts the server when you save a file and shows a detailed
   error page in the browser. **Never use it in production** — it exposes an
   interactive Python console to anyone who can reach the page.
