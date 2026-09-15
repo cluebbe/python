@@ -244,6 +244,44 @@ The two decorators side by side:
 **Rule of thumb:** parentheses in the `@` line mean one extra layer of nesting
 in the definition.
 
+### Why is one inner function called `wrapper` and the other `decorator`?
+
+Both are "the function returned by the outer one", but they play different
+roles, and the name records which. Look at what each one takes as its
+**argument** — that is what decides the name, not how deeply it is nested:
+
+```python
+def shout(func):            # takes a function    -> this IS the decorator
+    def wrapper(name):      # takes greet's args  -> a stand-in for greet
+        return func(name).upper()
+    return wrapper
+
+def route(path):            # takes a URL         -> a decorator *factory*
+    def decorator(func):    # takes a function    -> this IS the decorator
+        routes[path] = func
+        return func         # no wrapper — nothing stands in for home
+    return decorator
+```
+
+| What it takes | Role | Usual name | When it runs |
+|---|---|---|---|
+| A config value like a URL | Decorator factory | `route`, `app.route` | At `@` time, first |
+| A function | Decorator | `shout`, `decorator` | At `@` time, once per `def` |
+| The original function's args | Wrapper | `wrapper` | Every time you call the function |
+
+So `shout` and the inner `decorator` in `route` are the **same role** — both
+take your function and return whatever the name gets bound to. `shout` is that
+role at the top level because it needs no argument; `route` has to be built by a
+call first, which pushes its decorator one level down.
+
+And `route` has no wrapper at all: it returns `func` unchanged, so nothing
+stands in front of your function at call time. That is the whole difference this
+task is about — a wrapper replaces, a registering decorator does not.
+
+Python does not care about any of these names; they are pure convention. But
+`def wrapper(...)` should make you expect a replacement, and `def
+decorator(func)` should make you expect the `@` machinery.
+
 ### Now build it
 
 1. Build a tiny version yourself: a dict `routes`, and a decorator `route(path)`
