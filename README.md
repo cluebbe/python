@@ -1,7 +1,7 @@
 # Python Workshops
 
 Hands-on Python tutorials, starting from scratch. No prior programming
-experience needed for the first workshops, and the first two need no
+experience needed for the first workshops, and the first three need no
 third-party packages at all — they run on a plain Python installation.
 
 Each tutorial comes as a pair: a runnable `.py` file you can execute and
@@ -13,8 +13,8 @@ it lives in the `flask_tutorial/` folder.
 
 ## Getting Started
 
-**Requirements:** Python 3.9 or newer. Workshops 1 and 2 need nothing else;
-workshop 3 additionally needs Flask.
+**Requirements:** Python 3.9 or newer. Workshops 1 to 3 need nothing else;
+workshop 4 additionally needs Flask.
 
 ```bash
 # Check your Python version
@@ -23,7 +23,7 @@ python3 --version
 # Run a tutorial
 python3 python_basics.py
 
-# Workshop 3 only — install Flask in a virtual environment first
+# Workshop 4 only — install Flask in a virtual environment first
 python3 -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install flask
@@ -45,7 +45,16 @@ and data types, string formatting with f-strings, user input, conditionals,
 lists, loops, dictionaries, and functions — ending with a small interactive
 program that uses all of them together.
 
-### 2. Object-Oriented Programming
+### 2. List Tricks
+**Files:** [list_tricks.py](list_tricks.py) · [LIST_TRICKS.md](LIST_TRICKS.md)
+
+Short, readable ways to work with lists (Python's arrays). Covers negative
+indexes, slicing and reversing with `[::-1]`, unpacking with `*`, list
+comprehensions, `enumerate` and `zip`, built-ins such as `sorted`, `any` and
+`all`, and rounding numbers for output — ending with a small grade report
+that combines every trick.
+
+### 3. Object-Oriented Programming
 **Files:** [oop_basics.py](oop_basics.py) · [OOP_BASICS.md](OOP_BASICS.md)
 
 The four pillars of OOP in Python: classes, objects, inheritance, and
@@ -54,7 +63,7 @@ methods, readable `__str__` output, inheriting from a parent class, and using
 `super()` to extend it — all illustrated with a practical library system
 example.
 
-### 3. Web Development with Flask
+### 4. Web Development with Flask
 **Files:** [flask_tutorial/flask_basics.py](flask_tutorial/flask_basics.py) ·
 [flask_tutorial/FLASK_BASICS.md](flask_tutorial/FLASK_BASICS.md)
 
@@ -66,8 +75,9 @@ then covers dynamic URLs, query parameters, HTTP methods, JSON responses,
 Jinja2 templates in their own files with `templates/` and `static/`, and error
 handlers, ending with a small task API.
 
-Start with Python Basics; the OOP workshop assumes you are comfortable with
-functions, lists, and dictionaries, and the Flask workshop assumes both. More
+Start with Python Basics; List Tricks builds directly on its lists and loops,
+the OOP workshop assumes you are comfortable with functions, lists, and
+dictionaries, and the Flask workshop assumes both. More
 advanced topics will be added here over time.
 
 ---
