@@ -14,7 +14,7 @@ it lives in the `flask_tutorial/` folder.
 ## Getting Started
 
 **Requirements:** Python 3.9 or newer. Workshops 1 to 3 need nothing else;
-workshop 4 additionally needs Flask.
+workshop 4 additionally needs Flask, and workshop 5 needs NumPy.
 
 ```bash
 # Check your Python version
@@ -23,11 +23,12 @@ python3 --version
 # Run a tutorial
 python3 python_basics.py
 
-# Workshop 4 only — install Flask in a virtual environment first
+# Workshops 4 and 5 — install the packages in a virtual environment first
 python3 -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
-pip install flask
+pip install flask numpy
 python flask_tutorial/flask_basics.py
+python numpy_tricks.py
 ```
 
 Work through the `.md` file alongside the code: read a section, try the task
@@ -75,9 +76,19 @@ then covers dynamic URLs, query parameters, HTTP methods, JSON responses,
 Jinja2 templates in their own files with `templates/` and `static/`, and error
 handlers, ending with a small task API.
 
+### 5. NumPy Tricks
+**Files:** [numpy_tricks.py](numpy_tricks.py) · [NUMPY_TRICKS.md](NUMPY_TRICKS.md)
+
+Replacing loops with NumPy arrays, in about 30 minutes. Covers math on whole
+arrays, creating and reshaping arrays, `[row, column]` indexing, boolean
+masks, `np.where` and `np.clip`, aggregating with `axis`, broadcasting, and
+`argmax` / `argsort` with fancy indexing — ending with the List Tricks grade
+report rewritten without a single loop.
+
 Start with Python Basics; List Tricks builds directly on its lists and loops,
 the OOP workshop assumes you are comfortable with functions, lists, and
-dictionaries, and the Flask workshop assumes both. More
+dictionaries, and the Flask workshop assumes both. NumPy Tricks builds on
+List Tricks and can be done straight after it. More
 advanced topics will be added here over time.
 
 ---
